@@ -1,0 +1,30 @@
+# HotelCRM ERP — Apache rewrite rules
+# Route every request that is not a real file/dir through index.php.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Allow the installer and public assets to be served directly.
+    RewriteCond %{REQUEST_URI} ^/install/ [OR]
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Block access to sensitive paths
+<FilesMatch "\.(sql|log|md|json|lock)$">
+    Require all denied
+</FilesMatch>
+
+# Prevent listing directories
+Options -Indexes

@@ -1,0 +1,24 @@
+# Local configuration (contains credentials)
+/config/config.php
+
+# Runtime storage
+/storage/logs/*
+/storage/cache/*
+/storage/backups/*
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/backups/.gitkeep
+
+# Uploaded files
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Installer lock
+/install/installed.lock
+
+# Dependencies / editor cruft
+/vendor/
+.DS_Store
+*.log
+.idea/
+.vscode/

@@ -1,0 +1,22 @@
+/* Lightweight emoji-glyph icon set so no icon font/CDN is required. */
+[class^="icon-"]::before, [class*=" icon-"]::before {
+    display: inline-block; font-style: normal; line-height: 1;
+}
+.icon-grid::before     { content: "▦"; }
+.icon-calendar::before { content: "📅"; }
+.icon-door::before     { content: "🚪"; }
+.icon-bed::before      { content: "🛏"; }
+.icon-layers::before   { content: "🗂"; }
+.icon-broom::before    { content: "🧹"; }
+.icon-receipt::before  { content: "🧾"; }
+.icon-users::before    { content: "👥"; }
+.icon-globe::before    { content: "🌐"; }
+.icon-chart::before    { content: "📊"; }
+.icon-building::before { content: "🏨"; }
+.icon-shield::before   { content: "🛡"; }
+.icon-gear::before     { content: "⚙"; }
+.icon-list::before     { content: "📋"; }
+.icon-menu::before     { content: "☰"; }
+.icon-user::before     { content: "👤"; }
+.icon-money::before    { content: "💰"; }
+.icon-check::before    { content: "✅"; }
