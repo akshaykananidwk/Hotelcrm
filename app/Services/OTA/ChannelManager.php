@@ -3,6 +3,7 @@ namespace App\Services\OTA;
 
 use App\Core\App;
 use App\Core\Logger;
+use App\Core\Crypto;
 use App\Models\OtaChannel;
 
 /**
@@ -14,8 +15,6 @@ class ChannelManager
 {
     /** Channels served by the generic REST connector. */
     private const GENERIC = [
-        'makemytrip'  => 'MakeMyTrip',
-        'goibibo'     => 'Goibibo',
         'agoda'       => 'Agoda',
         'expedia'     => 'Expedia',
         'airbnb'      => 'Airbnb',
@@ -24,24 +23,48 @@ class ChannelManager
         'hostelworld' => 'Hostelworld',
     ];
 
+    /** Channels driven through their web extranet (no partner API). */
+    private const WEB_AUTOMATION = ['makemytrip', 'goibibo'];
+
     public function connector(int $hotelId, string $channel): OtaConnector
     {
         $creds = $this->credentials($hotelId, $channel);
         if ($channel === 'booking_com') {
             return new BookingComConnector($hotelId, $creds);
         }
+        if (in_array($channel, self::WEB_AUTOMATION, true)) {
+            return new MakeMyTripConnector($hotelId, $creds, $channel);
+        }
         $name = self::GENERIC[$channel] ?? ucfirst($channel);
         return new GenericOtaConnector($hotelId, $creds, $channel, $name);
     }
 
+    /**
+     * Decrypt and return the channel's credentials + automation config. Newer
+     * rows are AES-GCM encrypted (Crypto); legacy plaintext JSON is tolerated.
+     * The automation block (mode, flows, selectors) is merged in under
+     * 'automation' plus a top-level 'connection_mode'.
+     */
     private function credentials(int $hotelId, string $channel): array
     {
         $row = (new OtaChannel())->byChannel($hotelId, $channel);
-        if (!$row || empty($row['credentials'])) {
+        if (!$row) {
             return [];
         }
-        $decoded = json_decode($row['credentials'], true);
-        return is_array($decoded) ? $decoded : [];
+        $creds = [];
+        if (!empty($row['credentials'])) {
+            $creds = Crypto::isEncrypted($row['credentials'])
+                ? Crypto::decryptArray($row['credentials'])
+                : (json_decode($row['credentials'], true) ?: []);
+        }
+        if (!empty($row['automation_config'])) {
+            $auto = Crypto::isEncrypted($row['automation_config'])
+                ? Crypto::decryptArray($row['automation_config'])
+                : (json_decode($row['automation_config'], true) ?: []);
+            $creds['automation'] = $auto;
+        }
+        $creds['connection_mode'] = $row['connection_mode'] ?? 'api';
+        return $creds;
     }
 
     /** Queue a sync job (async). */

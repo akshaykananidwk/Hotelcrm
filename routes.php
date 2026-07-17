@@ -88,6 +88,7 @@ $router->group(['middleware' => [AuthMiddleware::class]], function ($r) {
     // Channel manager
     $r->get('/channels', 'ChannelController@index');
     $r->post('/channels/{id}/sync', 'ChannelController@sync');
+    $r->post('/channels/{id}/test', 'ChannelController@test');
 
     // Users & roles
     $r->get('/users', 'UserController@index');

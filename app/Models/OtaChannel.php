@@ -8,6 +8,7 @@ class OtaChannel extends Model
     protected string $table = 'ota_channels';
     protected array $fillable = [
         'hotel_id', 'channel', 'display_name', 'credentials',
+        'connection_mode', 'automation_config',
         'is_enabled', 'last_sync_at', 'last_status',
     ];
 

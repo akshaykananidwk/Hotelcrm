@@ -95,6 +95,7 @@ Hotelcrm/
 | 5 | Billing (GST invoices, POS lines, payments, refunds, PDF, email) | ✅ |
 | 6 | CRM (guest DB, loyalty, history, feedback) | ✅ |
 | 7 | OTA Channel Manager (async queue + connectors) | ✅ (connectors need partner creds) |
+| 7b | **OTA web automation** (MakeMyTrip/Goibibo without API — cURL session or real headless browser) | ✅ (see `docs/AUTOMATION.md`) |
 | 8 | Website booking engine (public API + promos) | ✅ |
 | 9 | Payment gateways (Razorpay, PayU, PhonePe, Cash) | ✅ (keys in settings) |
 | 10 | WhatsApp automation (bulk.akdwk.in gateway) | ✅ |
@@ -116,7 +117,8 @@ Hotelcrm/
 ## Extending
 
 - **New payment gateway:** implement `App\Services\Payment\PaymentGateway`, register it in `PaymentManager::GATEWAYS`.
-- **New OTA:** extend `App\Services\OTA\AbstractOtaConnector`, register it in `ChannelManager`.
+- **New OTA (API):** extend `App\Services\OTA\AbstractOtaConnector`, register it in `ChannelManager`.
+- **New OTA (no API):** extend `App\Services\OTA\WebAutomationConnector` with default flows, register it in `ChannelManager`; operators configure selectors in Settings. See `docs/AUTOMATION.md`.
 - **New notification channel:** implement `App\Services\Notification\NotificationChannel`, add it to `NotificationManager::channelFor()`.
 
 ## Tests

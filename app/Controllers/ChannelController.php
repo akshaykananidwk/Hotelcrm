@@ -40,4 +40,33 @@ class ChannelController extends Controller
         Session::flash('success', $channel['display_name'] . ' sync queued.');
         $this->back();
     }
+
+    /**
+     * Run a live login/connection test for a channel (API creds, cURL session
+     * or a real browser flow depending on its connection mode). Reports the
+     * result and any captured screenshot for verifying the automation flow.
+     */
+    public function test($params): void
+    {
+        $this->authorize('channels.manage');
+        $hotelId = $this->currentHotelId();
+        $channel = (new OtaChannel())->find($params['id']);
+        if (!$channel) {
+            Session::flash('error', 'Channel not found.');
+            $this->back();
+            return;
+        }
+        try {
+            $result = (new ChannelManager())->connector($hotelId, $channel['channel'])->testConnection();
+        } catch (\Throwable $e) {
+            $result = ['success' => false, 'message' => $e->getMessage()];
+        }
+        Audit::log('channel.test', 'ota_channel', $channel['id'], ['ok' => $result['success']]);
+
+        $shots = $result['data']['screenshots'] ?? [];
+        $shotNote = $shots ? ' (screenshot saved: ' . basename((string) $shots[0]) . ')' : '';
+        Session::flash($result['success'] ? 'success' : 'error',
+            $channel['display_name'] . ' test: ' . ($result['message'] ?? '') . $shotNote);
+        $this->back();
+    }
 }

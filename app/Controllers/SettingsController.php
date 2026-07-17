@@ -90,16 +90,43 @@ class SettingsController extends Controller
         $channelModel = new OtaChannel();
         foreach ((array) Request::input('channel', []) as $channelKey => $fields) {
             $existing = $channelModel->byChannel($hotelId, $channelKey);
+
+            // Preserve an existing password when the field is left blank.
+            $existingCreds = [];
+            if ($existing && !empty($existing['credentials'])) {
+                $existingCreds = \App\Core\Crypto::isEncrypted($existing['credentials'])
+                    ? \App\Core\Crypto::decryptArray($existing['credentials'])
+                    : (json_decode($existing['credentials'], true) ?: []);
+            }
+            $password = ($fields['password'] ?? '') !== '' ? $fields['password'] : ($existingCreds['password'] ?? '');
+
             $creds = array_filter([
-                'api_key' => $fields['api_key'] ?? '',
+                'api_key'  => $fields['api_key'] ?? '',
                 'username' => $fields['username'] ?? '',
-                'password' => $fields['password'] ?? '',
+                'password' => $password,
                 'hotel_id' => $fields['hotel_id'] ?? '',
                 'endpoint' => $fields['endpoint'] ?? '',
             ], fn ($v) => $v !== '');
+
+            // Connection mode + automation config (flows/selectors JSON).
+            $mode = in_array($fields['mode'] ?? 'api', ['api', 'web_session', 'browser'], true)
+                ? $fields['mode'] : 'api';
+            $automation = [];
+            if (!empty($fields['automation_json'])) {
+                $decoded = json_decode($fields['automation_json'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $automation = $decoded;
+                } else {
+                    Session::flash('error', ucfirst($channelKey) . ': automation JSON was invalid and not saved.');
+                }
+            }
+
+            // Credentials and automation config are encrypted at rest.
             $data = [
-                'credentials' => json_encode($creds),
-                'is_enabled' => !empty($fields['enabled']) ? 1 : 0,
+                'credentials'       => \App\Core\Crypto::encryptArray($creds),
+                'connection_mode'   => $mode,
+                'automation_config' => $automation ? \App\Core\Crypto::encryptArray($automation) : null,
+                'is_enabled'        => !empty($fields['enabled']) ? 1 : 0,
             ];
             if ($existing) {
                 $channelModel->update($existing['id'], $data);

@@ -358,7 +358,11 @@ CREATE TABLE IF NOT EXISTS ota_channels (
     hotel_id     INT UNSIGNED NOT NULL,
     channel      VARCHAR(60) NOT NULL,                 -- booking_com, agoda...
     display_name VARCHAR(120) NOT NULL,
-    credentials  TEXT NULL,                            -- JSON (encrypted at app layer)
+    credentials  TEXT NULL,                            -- AES-GCM encrypted JSON (Crypto)
+    -- How this channel is integrated: an official API, a cURL web session, or
+    -- a real (headless) browser driving the extranet UI when no API exists.
+    connection_mode ENUM('api','web_session','browser') NOT NULL DEFAULT 'api',
+    automation_config TEXT NULL,                       -- AES-GCM encrypted JSON: flows, selectors, driver
     is_enabled   TINYINT(1) NOT NULL DEFAULT 0,
     last_sync_at DATETIME NULL,
     last_status  ENUM('idle','success','failed','running') NOT NULL DEFAULT 'idle',

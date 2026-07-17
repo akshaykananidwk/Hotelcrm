@@ -18,10 +18,16 @@
                     <span class="badge bg-<?= badge($c['last_status']) ?>"><?= e($c['last_status']) ?></span>
                 </div>
                 <?php if (can('channels.manage')): ?>
-                <form method="post" action="<?= url('/channels/'.$c['id'].'/sync') ?>">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-sm btn-primary w-100" <?= $c['is_enabled'] ? '' : 'disabled' ?>>Sync Now</button>
-                </form>
+                <div class="d-flex gap-1">
+                    <form method="post" action="<?= url('/channels/'.$c['id'].'/sync') ?>" class="flex-grow-1">
+                        <?= csrf_field() ?>
+                        <button class="btn btn-sm btn-primary w-100" <?= $c['is_enabled'] ? '' : 'disabled' ?>>Sync Now</button>
+                    </form>
+                    <form method="post" action="<?= url('/channels/'.$c['id'].'/test') ?>">
+                        <?= csrf_field() ?>
+                        <button class="btn btn-sm btn-outline-secondary" title="Test login / connection">Test</button>
+                    </form>
+                </div>
                 <?php endif; ?>
             </div></div>
         </div>

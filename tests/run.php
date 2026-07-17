@@ -79,6 +79,26 @@ check(count((new PaymentManager())->available()) >= 4, 'lists gateways');
 $o = (new CashGateway())->createOrder(500, 'INR');
 check($o['success'] && !empty($o['reference']), 'cash gateway creates order');
 
+echo "Crypto (credential encryption)\n";
+$blob = App\Core\Crypto::encryptArray(['username' => 'u', 'password' => 'p@ss']);
+check(App\Core\Crypto::isEncrypted($blob), 'produces enc:v1 ciphertext');
+check(!str_contains($blob, 'p@ss'), 'plaintext not exposed in ciphertext');
+check((App\Core\Crypto::decryptArray($blob)['password'] ?? '') === 'p@ss', 'round-trips correctly');
+check(App\Core\Crypto::decrypt('plain-legacy') === 'plain-legacy', 'tolerates legacy plaintext');
+
+echo "Web automation (HTML parsing + flow interpolation)\n";
+$ws = new App\Services\Automation\WebSession();
+$html = '<form id="loginForm" action="/login"><input type="hidden" name="csrf" value="tok123"></form>';
+check(($ws->hiddenInputs($html)['csrf'] ?? '') === 'tok123', 'extracts hidden CSRF token');
+check($ws->formAction($html, 'loginForm') === '/login', 'extracts form action');
+$flow = new App\Services\Automation\AutomationFlow(new App\Services\Automation\BrowserDriver(), ['username' => 'hoteluser']);
+$ri = new ReflectionMethod($flow, 'interp');
+$ri->setAccessible(true);
+check($ri->invoke($flow, 'user={{username}}') === 'user=hoteluser', 'flow interpolates context vars');
+$mmt = new App\Services\OTA\MakeMyTripConnector(1, [], 'makemytrip');
+check($mmt->displayName() === 'MakeMyTrip', 'MakeMyTrip connector resolves');
+check($mmt->testConnection()['success'] === false, 'guards when extranet credentials absent');
+
 echo "\n" . str_repeat('=', 40) . "\n";
 echo "PASSED: $pass   FAILED: $fail\n";
 exit($fail === 0 ? 0 : 1);
